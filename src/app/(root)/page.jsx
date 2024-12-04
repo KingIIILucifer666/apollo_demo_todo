@@ -5,6 +5,7 @@ import { useNhostClient } from "@nhost/nextjs";
 import { useQuery, useMutation, gql } from "@apollo/client";
 
 import toast from "react-hot-toast";
+import Image from "next/image";
 
 const GET_USER_TODOS = gql`
   query GetUserTodos($userId: uuid!) {
@@ -14,6 +15,7 @@ const GET_USER_TODOS = gql`
       completed
       created_at
       updated_at
+      file_id
     }
   }
 `;
@@ -114,6 +116,10 @@ export default function Home() {
     }
   };
 
+  const getFileUrl = (fileId) => {
+    return nhostClient.storage.getPublicUrl({ fileId: fileId });
+  };
+
   return (
     <div className="bg-zinc-800 h-screen w-full justify-between">
       <div className="w-full bg-black/20 px-28 py-5 inline-flex justify-center items-center gap-5">
@@ -165,55 +171,72 @@ export default function Home() {
               {loadingData ? (
                 <p>LoadingData...</p>
               ) : (
-                <div className="bg-zinc-500 w-full h-full flex justify-center rounded-xl md:p-6 p-4 overflow-y-auto no-scrollbar">
-                  <table className="border-collapse w-full text-left text-xs bg-zinc-700 text-white rounded-lg shadow-lg">
-                    <thead>
-                      <tr className="uppercase border-b border-gray-600">
-                        <th className="py-3 px-4 font-medium">ID</th>
-                        <th className="py-3 px-4 font-medium">TITLE</th>
-                        <th className="py-3 px-4 font-medium">COMPLETED</th>
-                        <th className="py-3 px-4 font-medium">CREATED AT</th>
-                        <th className="py-3 px-4 font-medium">UPDATED AT</th>
-                        <th className="py-3 px-4 font-medium">Delete</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {todos ? (
-                        todos.map((todo, index) => (
-                          <tr key={index}>
-                            <td className="py-3 px-4">{todo.id}</td>
-                            <td className="py-3 px-4">{todo.title}</td>
-                            <td className="py-3 px-4 inline-flex justify-center items-center gap-2">
-                              <div
-                                className={` h-2 w-2 rounded-full ${
-                                  todo.completed ? "bg-green-600" : "bg-red-600"
-                                }`}
-                              ></div>
-                              <button
-                                type="button"
-                                onClick={() => handleUpdateTodo(todo.id)}
-                              >
-                                Toggle
-                              </button>
-                            </td>
-                            <td className="py-3 px-4">{todo.created_at}</td>
-                            <td className="py-3 px-4">{todo.updated_at}</td>
-                            <td className="py-3 px-4">
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteTodo(todo.id)}
-                              >
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <div>Please Insert Some Todo's</div>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                <>
+                  <div className="bg-zinc-500 w-full h-full flex flex-col justify-center rounded-xl md:p-6 p-4 overflow-y-auto no-scrollbar">
+                    <table className="border-collapse w-full text-left text-xs bg-zinc-700 text-white rounded-lg shadow-lg">
+                      <thead>
+                        <tr className="uppercase border-b border-gray-600">
+                          <th className="py-3 px-4 font-medium">ID</th>
+                          <th className="py-3 px-4 font-medium">TITLE</th>
+                          <th className="py-3 px-4 font-medium">COMPLETED</th>
+                          <th className="py-3 px-4 font-medium">CREATED AT</th>
+                          <th className="py-3 px-4 font-medium">UPDATED AT</th>
+                          <th className="py-3 px-4 font-medium">Delete</th>
+                          <th className="py-3 px-4 font-medium">Image</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {todos ? (
+                          todos.map((todo, index) => (
+                            <tr key={index}>
+                              <td className="py-3 px-4">{todo.id}</td>
+                              <td className="py-3 px-4">{todo.title}</td>
+                              <td className="py-3 px-4 inline-flex justify-center items-center gap-2">
+                                <div
+                                  className={` h-2 w-2 rounded-full ${
+                                    todo.completed
+                                      ? "bg-green-600"
+                                      : "bg-red-600"
+                                  }`}
+                                ></div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateTodo(todo.id)}
+                                >
+                                  Toggle
+                                </button>
+                              </td>
+                              <td className="py-3 px-4">{todo.created_at}</td>
+                              <td className="py-3 px-4">{todo.updated_at}</td>
+                              <td className="py-3 px-4">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteTodo(todo.id)}
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                              <td>
+                                <Image
+                                  src={
+                                    process.env.NEXT_PUBLIC_STORAGE_REF +
+                                    todo.file_id
+                                  }
+                                  alt={`${todo.title} Image`}
+                                  width={50}
+                                  height={50}
+                                  className="w-full h-full object-cover"
+                                />
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <div>Please Insert Some Todo's</div>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           ) : (
