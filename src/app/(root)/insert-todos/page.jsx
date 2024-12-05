@@ -1,21 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import { useMutation, gql } from "@apollo/client";
+import { useMutation } from "@apollo/client";
 import { useFileUpload } from "@nhost/nextjs";
 import toast from "react-hot-toast";
-import { useSearchParams } from "next/navigation";
-
-const CREATE_TODO = gql`
-  mutation MyMutation($title: String!, $file_id: uuid, $user_id: uuid!) {
-    insert_todos_one(
-      object: { title: $title, file_id: $file_id, user_id: $user_id }
-    ) {
-      id
-    }
-  }
-`;
+import { useRouter, useSearchParams } from "next/navigation";
+import { CREATE_TODO } from "@/graphQL/queries";
 
 const InsertTodos = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const user_id = searchParams.get("id");
 
@@ -50,13 +42,14 @@ const InsertTodos = () => {
       });
 
       toast.success("New Todo Inserted!");
+      router.push("/");
     } catch (error) {
       toast.error("Error Inserting Todo: ", error);
     }
   };
 
   return (
-    <div className="min-h-screen w-full bg-green-800 flex flex-col justify-start items-center">
+    <div className="min-h-screen w-full bg-zinc-800 flex flex-col justify-start items-center">
       <div className="h-40 w-40 bg-red-900 rounded-full mt-10 inline-flex justify-center items-center shadow-lg text-lg">
         Insert Todos
       </div>
@@ -83,7 +76,10 @@ const InsertTodos = () => {
               onChange={(e) => setTodoAttachment(e.target.files[0])}
             />
           </div>
-          <button type="submit" className="w-max bg-red-800 p-2">
+          <button
+            type="submit"
+            className="w-max bg-red-800 p-2 rounded-md inline-flex justify-center items-center"
+          >
             Create
           </button>
         </form>

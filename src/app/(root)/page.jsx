@@ -2,52 +2,18 @@
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useNhostClient } from "@nhost/nextjs";
-import { useQuery, useMutation, gql } from "@apollo/client";
+import { useQuery, useMutation, useSubscription } from "@apollo/client";
 
 import toast from "react-hot-toast";
 import Image from "next/image";
-
-const GET_USER_TODOS = gql`
-  query GetUserTodos($userId: uuid!) {
-    todos(where: { user_id: { _eq: $userId } }) {
-      id
-      title
-      completed
-      created_at
-      updated_at
-      file_id
-    }
-  }
-`;
-
-const UPDATE_TODO = gql`
-  mutation UpdateTodo($id: uuid!, $user_id: uuid!) {
-    update_todos(
-      where: { id: { _eq: $id }, user_id: { _eq: $user_id } }
-      _set: { completed: true }
-    ) {
-      returning {
-        id
-        completed
-      }
-    }
-  }
-`;
-
-const DELETE_TODO = gql`
-  mutation DeleteTodo($id: uuid!, $user_id: uuid!) {
-    delete_todos(where: { id: { _eq: $id }, user_id: { _eq: $user_id } }) {
-      returning {
-        id
-      }
-    }
-  }
-`;
+import {
+  DELETE_TODO,
+  GET_USER_TODOS,
+  UPDATE_TODO,
+  SUBSCRIBE_TODOS,
+} from "@/graphQL/queries";
 
 export default function Home() {
-  const [loadingData, setLoadingData] = useState(false);
-  const [fetchAll, setFetchAll] = useState(false);
-
   const [session, setSession] = useState(null);
   const [accessToken, setAccessToken] = useState(null);
   const [todos, setTodos] = useState([]);
@@ -55,12 +21,18 @@ export default function Home() {
 
   const nhostClient = useNhostClient();
 
-  const { loading, error, data } = useQuery(GET_USER_TODOS, {
+  // const { loading, error, data } = useQuery(GET_USER_TODOS, {
+  //   variables: { userId },
+  //   skip: !userId || userId.trim() === "", //Skips the user ID  If user ID is not defined / does not exist!
+  // });
+
+  const { loading, error, data } = useSubscription(SUBSCRIBE_TODOS, {
     variables: { userId },
-    skip: !userId || userId.trim() === "", //Skips the user ID  If user ID is not defined / does not exist!
+    skip: !userId || userId.trim() === "",
   });
 
   const [updateTodo] = useMutation(UPDATE_TODO);
+
   const [deleteTodo] = useMutation(DELETE_TODO);
 
   useEffect(() => {
@@ -168,7 +140,7 @@ export default function Home() {
               <div className="flex flex-col justify-center items-center p-10">
                 ALL TODOS
               </div>
-              {loadingData ? (
+              {loading ? (
                 <p>LoadingData...</p>
               ) : (
                 <>
